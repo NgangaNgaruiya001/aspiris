@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Styled Sales Table</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --table-bg: #ffffff;
+            --table-header-bg: #f3f4f6;
+            --table-border: #e5e7eb;
+            --table-hover: #f9fafb;
+            --button-bg: #4f46e5;
+            --button-hover: #4338ca;
+        }
+
+        .dark-mode {
+            --bg-color: #1f2937;
+            --text-color: #e5e7eb;
+            --table-bg: #374151;
+            --table-header-bg: #4b5563;
+            --table-border: #6b7280;
+            --table-hover: #4b5563;
+            --button-bg: #6366f1;
+            --button-hover: #4f46e5;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px;
+            padding: 10px;
+        }
+
+        .home-button, #darkModeToggle {
+            padding: 10px 20px;
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .home-button:hover, #darkModeToggle:hover {
+            background-color: var(--button-hover);
+        }
+
+        .filter-form {
+            margin: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filter-form select {
+            padding: 8px;
+            font-size: 14px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .filter-form button {
+            padding: 8px 16px;
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .table-container {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            margin: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--table-bg);
+            table-layout: auto;
+        }
+
+        thead {
+            background-color: var(--table-header-bg);
+        }
+
+        th {
+            text-transform: uppercase;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 2px solid var(--table-border);
+        }
+
+        td {
+            padding: 12px 15px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--table-border);
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: var(--table-hover);
+        }
+
+        tbody tr:hover {
+            background-color: var(--table-hover);
+            transition: background-color 0.3s ease;
+        }
+
+        .rank {
+            font-weight: bold;
+            text-align: center;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .rank-1 { background-color: #FFD700; color: #000; }
+        .rank-2 { background-color: #C0C0C0; color: #000; }
+        .rank-3 { background-color: #CD7F32; color: #000; }
+        .rank-4 { background-color: #90EE90; color: #000; }
+        .rank-5 { background-color: #FFFFE0; color: #000; }
+        .rank-6 { background-color: #FFA07A; color: #000; }
+        .rank-7 { background-color: #FF6347; color: #000; }
+        .rank-other { background-color: #E5E7EB; color: #374151; }
+
+        .rank-1::after { content: " 🥇"; }
+        .rank-2::after { content: " 🥈"; }
+        .rank-3::after { content: " 🥉"; }
+        .rank-4::after { content: " 😃"; }
+        .rank-5::after { content: " 🙂"; }
+        .rank-6::after { content: " 😐"; }
+        .rank-7::after { content: " 😕"; }
+
+        @media (max-width: 1024px) {
+            th, td {
+                font-size: 12px;
+                padding: 10px;
+            }
+
+            .rank {
+                width: 25px;
+                height: 25px;
+                font-size: 12px;
+            }
+
+            .home-button, #darkModeToggle {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            table {
+                font-size: 10px;
+            }
+
+            th, td {
+                padding: 8px 10px;
+            }
+
+            .rank {
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+            }
+
+            .home-button, #darkModeToggle {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <button class="home-button" onclick="window.location.href='/'">Home</button>
+        <button id="darkModeToggle">Toggle Dark Mode</button>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="filter-form">
+        <form method="get" action="">
+            <label for="months">Select Months:</label>
+            <select name="months" multiple>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+            </select>
+
+            <label for="years">Select Year:</label>
+            <select name="years">
+                <option value="2024">2024</option>
+            </select>
+
+            <button type="submit">Filter</button>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Region</th>
+                    <th>Cardio Rank</th>
+                    <th>Cardio Target</th>
+                    <th>Cardio Actual</th>
+                    <th>Cardio % Achieved</th>
+                    <th>Gyn Rank</th>
+                    <th>Gyn Target</th>
+                    <th>Gyn Actual</th>
+                    <th>Gyn % Achieved</th>
+                    <th>Pain Rank</th>
+                    <th>Pain Target</th>
+                    <th>Pain Actual</th>
+                    <th>Pain % Achieved</th>
+                    <th>Total Rank</th>
+                    <th>Total Target</th>
+                    <th>Total Actual</th>
+                    <th>Total % Achieved</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for region, data in region_totals.items %}
+                <tr>
+                    <td>{{ region }}</td>
+                    <td><div class="rank rank-{% if data.cardio_rank <= 7 %}{{ data.cardio_rank }}{% else %}other{% endif %}">{{ data.cardio_rank }}</div></td>
+                    <td>{{ data.Cardio.target }}</td>
+                    <td>{{ data.Cardio.actual }}</td>
+                    <td>{{ data.Cardio.percent_achieved }}%</td>
+                    <td><div class="rank rank-{% if data.gyn_rank <= 7 %}{{ data.gyn_rank }}{% else %}other{% endif %}">{{ data.gyn_rank }}</div></td>
+                    <td>{{ data.Gyn.target }}</td>
+                    <td>{{ data.Gyn.actual }}</td>
+                    <td>{{ data.Gyn.percent_achieved }}%</td>
+                    <td><div class="rank rank-{% if data.pain_rank <= 7 %}{{ data.pain_rank }}{% else %}other{% endif %}">{{ data.pain_rank }}</div></td>
+                    <td>{{ data.Pain.target }}</td>
+                    <td>{{ data.Pain.actual }}</td>
+                    <td>{{ data.Pain.percent_achieved }}%</td>
+                    <td><div class="rank rank-{% if data.total_rank <= 7 %}{{ data.total_rank }}{% else %}other{% endif %}">{{ data.total_rank }}</div></td>
+                    <td>{{ data.total_target }}</td>
+                    <td>{{ data.total_actual }}</td>
+                    <td>{{ data.total_percent_achieved }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        darkModeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+        });
+    </script>
+</body>
+</html>

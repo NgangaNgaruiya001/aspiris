@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Styled Sales Table</title>
+    <style>
+        /* Container for both the button and filter form */
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        /* Home button styles */
+        .home-button {
+            padding: 10px 20px;
+            background-color: #4f46e5; /* Same color as your filter button */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .home-button:hover {
+            background-color: #4338ca; /* Darker shade for hover effect */
+        }
+
+        /* Form container for right alignment */
+        .form-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #374151; /* Darker text color for consistency */
+        }
+
+        input {
+            padding: 8px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #4f46e5; /* Same color as filter button */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #4338ca; /* Darker shade for hover effect */
+        }
+
+        /* Table container */
+        .table-container {
+            max-width: 100%;
+            overflow-x: auto;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+        }
+
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Table header */
+        thead {
+            background-color: #f3f4f6;
+        }
+
+        th {
+            text-transform: uppercase;
+            font-weight: 600;
+            font-size: 14px;
+            color: #374151;
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 2px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+        /* Table body */
+        td {
+            padding: 12px 15px;
+            font-size: 14px;
+            color: #4b5563;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* Alternating row colors */
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        /* Hover effect on rows */
+        tbody tr:hover {
+            background-color: #f3f4f6;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Responsive design */
+        @media (max-width: 640px) {
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header with Home button on the left and filter form on the right -->
+    <div class="header-container">
+        <!-- Home Button -->
+        <button class="home-button" onclick="window.location.href='/'">Home</button>
+
+        <!-- Filter Form -->
+        <div class="form-container">
+            <label for="month">Month:</label>
+            <input type="number" name="month" value="{{ month }}">
+
+            <label for="year">Year:</label>
+            <input type="number" name="year" value="{{ year }}">
+
+            <button type="submit">Filter</button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Item Code</th>
+                    <th onclick="sortTable(1)">Description</th>
+                    <th onclick="sortTable(2)">Qty (MTD)</th>
+                    <th onclick="sortTable(3)">Sales (MTD)</th>
+                    <th onclick="sortTable(4)">Qty (YTD)</th>
+                    <th onclick="sortTable(5)">Sales (YTD)</th>
+                    <th onclick="sortTable(6)">Doc Month</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in sales_data %}
+                <tr>
+                    <td>{{ data.ItemCode }}</td>
+                    <td>{{ data.Dscription }}</td>
+                    <td>{{ data.qty }}</td>
+                    <td>{{ data.sales_value }}</td>
+                    <td>{{ data.qty }}</td> <!-- Replace with YTD values if necessary -->
+                    <td>{{ data.sales_value }}</td> <!-- Replace with YTD values if necessary -->
+                    <td>{{ data.DocMonth }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let currentSortColumn = null;
+        let currentSortOrder = "asc"; // Default to ascending order
+
+        function sortTable(columnIndex) {
+            const table = document.querySelector("table");
+            const rows = Array.from(table.rows).slice(1); // Skip the header row
+            const isNumeric = columnIndex === 2 || columnIndex === 3 || columnIndex === 4 || columnIndex === 5;
+
+            // Sort rows based on the column index
+            rows.sort((rowA, rowB) => {
+                const cellA = rowA.cells[columnIndex].innerText;
+                const cellB = rowB.cells[columnIndex].innerText;
+
+                // If it's a numeric column, compare numbers
+                if (isNumeric) {
+                    return currentSortOrder === "asc" 
+                        ? parseFloat(cellA.replace(/,/g, '')) - parseFloat(cellB.replace(/,/g, ''))
+                        : parseFloat(cellB.replace(/,/g, '')) - parseFloat(cellA.replace(/,/g, ''));
+                } else {
+                    return currentSortOrder === "asc"
+                        ? cellA.localeCompare(cellB)
+                        : cellB.localeCompare(cellA);
+                }
+            });
+
+            // Rebuild the table body with sorted rows
+            rows.forEach(row => table.appendChild(row));
+
+            // Toggle the sort order and apply visual indicator
+            currentSortOrder = currentSortOrder === "asc" ? "desc" : "asc";
+            const headers = table.querySelectorAll("th");
+            headers.forEach((header, index) => {
+                if (index === columnIndex) {
+                    header.classList.toggle("sorted-asc", currentSortOrder === "asc");
+                    header.classList.toggle("sorted-desc", currentSortOrder === "desc");
+                } else {
+                    header.classList.remove("sorted-asc", "sorted-desc");
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regional Sales</title>
+    <style>
+        /* Table container */
+        .table-container {
+            max-width: 100%;
+            overflow-x: auto;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+        }
+
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Table header */
+        thead {
+            background-color: #f3f4f6;
+        }
+
+        th {
+            text-transform: uppercase;
+            font-weight: 600;
+            font-size: 14px;
+            color: #374151;
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 2px solid #e5e7eb;
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* Table body */
+        td {
+            padding: 12px 15px;
+            font-size: 14px;
+            color: #4b5563;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* Alternating row colors */
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        /* Hover effect on rows */
+        tbody tr:hover {
+            background-color: #f3f4f6;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Expandable row styles */
+        .expandable-row {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .expandable-row td:first-child::before {
+            content: '▶';
+            display: inline-block;
+            margin-right: 5px;
+            transition: transform 0.3s ease;
+        }
+
+        .expandable-row.expanded td:first-child::before {
+            transform: rotate(90deg);
+        }
+
+        .expanded-content {
+            display: none;
+        }
+
+        .expanded-content td {
+            padding-left: 30px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 640px) {
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+
+        /* Filter container */
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+
+        .filter-input {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+        }
+
+        .home-button {
+            padding: 8px 12px;
+            font-size: 14px;
+            color: white;
+            background-color: #374151;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Arrow icon */
+        .sort-arrow {
+            position: absolute;
+            right: 10px;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .sort-asc .sort-arrow {
+            transform: rotate(180deg);
+        }
+
+        .sort-desc .sort-arrow {
+            transform: rotate(0deg);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Filter and Home Button -->
+    <div class="filters">
+        <button class="home-button" onclick="window.location.href='/'">Home</button>
+        <input type="text" id="searchInput" class="filter-input" placeholder="Search anything..." />
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th data-column="CardName">Card Name <span class="sort-arrow">&#9660;</span></th>
+                    <th data-column="BRANCH">Branch <span class="sort-arrow">&#9660;</span></th>
+                    <th data-column="Dscription">Description <span class="sort-arrow">&#9660;</span></th>
+                    <th data-column="total_qty">Quantity <span class="sort-arrow">&#9660;</span></th>
+                    <th data-column="total_sales">Sales Value <span class="sort-arrow">&#9660;</span></th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                {% for data in sales_data %}
+                <tr>
+                    <td>{{ data.CardName }}</td>
+                    <td>{{ data.BRANCH }}</td>
+                    <td>{{ data.Dscription }}</td>
+                    <td>{{ data.total_qty }}</td>
+                    <td>{{ data.total_sales }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableBody = document.querySelector('#tableBody');
+            const rows = Array.from(tableBody.querySelectorAll('tr'));
+            const groupedData = {};
+
+            // Group the rows by CardName
+            rows.forEach(row => {
+                const cardName = row.cells[0].textContent;
+                if (!groupedData[cardName]) {
+                    groupedData[cardName] = [];
+                }
+                groupedData[cardName].push(row);
+            });
+
+            // Clear the table body
+            tableBody.innerHTML = '';
+
+            // Rebuild the table with grouped and expandable rows
+            for (const [cardName, groupRows] of Object.entries(groupedData)) {
+                const groupRow = document.createElement('tr');
+                groupRow.className = 'expandable-row';
+                groupRow.innerHTML = `
+                    <td>${cardName}</td>
+                    <td></td>
+                    <td></td>
+                    <td>${sumColumn(groupRows, 3)}</td>
+                    <td>${sumColumn(groupRows, 4)}</td>
+                `;
+                tableBody.appendChild(groupRow);
+
+                const detailsContainer = document.createElement('tr');
+                detailsContainer.className = 'expanded-content';
+                detailsContainer.innerHTML = '<td colspan="5"><table class="inner-table"></table></td>';
+                const innerTable = detailsContainer.querySelector('.inner-table');
+
+                groupRows.forEach(row => {
+                    const newRow = innerTable.insertRow();
+                    newRow.innerHTML = `
+                        <td></td>
+                        <td>${row.cells[1].textContent}</td>
+                        <td>${row.cells[2].textContent}</td>
+                        <td>${row.cells[3].textContent}</td>
+                        <td>${row.cells[4].textContent}</td>
+                    `;
+                });
+
+                tableBody.appendChild(detailsContainer);
+
+                groupRow.addEventListener('click', function() {
+                    this.classList.toggle('expanded');
+                    detailsContainer.style.display = this.classList.contains('expanded') ? 'table-row' : 'none';
+                });
+            }
+
+            // Function to sum column values
+            function sumColumn(rows, columnIndex) {
+                return rows.reduce((sum, row) => sum + parseFloat(row.cells[columnIndex].textContent) || 0, 0).toFixed(2);
+            }
+
+            // Sort functionality on header click
+            let sortDirection = { 'CardName': 'asc', 'BRANCH': 'asc', 'Dscription': 'asc', 'total_qty': 'asc', 'total_sales': 'asc' };
+            const headers = document.querySelectorAll('th');
+
+            headers.forEach(header => {
+                header.addEventListener('click', function() {
+                    const column = this.getAttribute('data-column');
+                    const direction = sortDirection[column] === 'asc' ? 'desc' : 'asc';
+                    sortDirection[column] = direction;
+
+                    // Toggle the sorting arrow
+                    const arrow = header.querySelector('.sort-arrow');
+                    if (direction === 'asc') {
+                        arrow.classList.remove('sort-desc');
+                        arrow.classList.add('sort-asc');
+                    } else {
+                        arrow.classList.remove('sort-asc');
+                        arrow.classList.add('sort-desc');
+                    }
+
+                    const sortedRows = rows.sort((a, b) => {
+                        const aValue = a.querySelector(`td:nth-child(${header.cellIndex + 1})`).textContent;
+                        const bValue = b.querySelector(`td:nth-child(${header.cellIndex + 1})`).textContent;
+
+                        if (column === 'total_qty' || column === 'total_sales') {
+                            return direction === 'asc' ? parseFloat(aValue) - parseFloat(bValue) : parseFloat(bValue) - parseFloat(aValue);
+                        }
+                        return direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                    });
+
+                    // Rebuild table body with sorted rows
+                    tableBody.innerHTML = '';
+                    sortedRows.forEach(row => {
+                        tableBody.appendChild(row);
+                    });
+                });
+            });
+
+            // Search filter functionality
+            document.getElementById('searchInput').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                rows.forEach(row => {
+                    const rowText = Array.from(row.cells)
+                        .map(cell => cell.textContent.toLowerCase())
+                        .join(' ');
+
+                    row.style.display = rowText.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
